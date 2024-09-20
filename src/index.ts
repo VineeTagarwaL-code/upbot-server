@@ -12,7 +12,7 @@ app.use("/*", (req, res, next) => {
 });
 
 app.get("/health", (req, res) => {
-  res.status(200).send("OK");
+  res.status(200).send("OK works");
 });
 async function startServer() {
   await connectDB();
