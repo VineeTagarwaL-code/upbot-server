@@ -10,7 +10,7 @@ const connectDB = async (): Promise<mongoose.Connection> => {
 
   try {
     await mongoose.connect(config.MONGO_URI, {
-      dbName: "ConcertPal",
+      dbName: "upbot",
     });
 
     logger.info("SERVER | MongoDB - Connected");
