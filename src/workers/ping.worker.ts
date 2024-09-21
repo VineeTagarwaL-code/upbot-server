@@ -18,26 +18,44 @@ const processPing = async (job: Job) => {
   try {
     const response = await axios.get(pingTask.url);
     const responseTime = Date.now() - startTime;
-    await PingLog.create({
+
+    const pingLog = await PingLog.create({
       pingTaskId: pingTaskId,
       status: "success",
       responseTime,
+      responseMessage: response.data,
       responseStatus: response.status,
     });
+
     pingTask.lastPingedAt = new Date();
+    pingTask.logs.push(pingLog._id);
+
+    if (pingTask.logs.length > 3) {
+      const oldestLogId = pingTask.logs.shift();
+      await PingLog.findByIdAndDelete(oldestLogId);
+    }
+
     await pingTask.save();
-    logger.info(
-      `Successfully pinged ${pingTask.url}. Response time: ${responseTime}ms`
-    );
   } catch (error: any) {
     const responseTime = Date.now() - startTime;
-    await PingLog.create({
+
+    const pingLog = await PingLog.create({
       pingTaskId,
       status: "failure",
       responseTime,
+      responseMessage: error.message || "Unknown error",
       responseStatus: error.response ? error.response.status : 0,
     });
-    logger.error(`Failed to ping ${pingTask.url}. Error: ${error.message}`);
+
+    pingTask.lastPingedAt = new Date();
+    pingTask.logs.push(pingLog._id);
+
+    if (pingTask.logs.length > 3) {
+      const oldestLogId = pingTask.logs.shift();
+      await PingLog.findByIdAndDelete(oldestLogId);
+    }
+
+    await pingTask.save();
   }
 };
 
@@ -62,7 +80,5 @@ pingWorker.on("failed", (job: any, err) => {
 pingWorker.on("error", (err) => {
   logger.error(`Worker error: ${err.message}`);
 });
-
-logger.info("Ping worker started and waiting for jobs...");
 
 export { pingWorker };
