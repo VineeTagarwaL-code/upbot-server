@@ -7,7 +7,7 @@ import { User } from "../../database/models/user";
 
 interface customPayload extends JwtPayload {
   email: string;
-  image: string;
+  picture: string;
 }
 
 const googleAuth = AsyncWrapper(async (req: Request, res: Response) => {
@@ -16,6 +16,7 @@ const googleAuth = AsyncWrapper(async (req: Request, res: Response) => {
     throw new ErrorHandler("TOKEN NOT PROVIDED", "UNAUTHORIZED");
   }
   const decoded_token_data = jwt.decode(token) as customPayload;
+  console.log(decoded_token_data);
   if (!decoded_token_data) {
     throw new ErrorHandler("INVALID TOKEN", "AUTHENTICATION_FAILED");
   }
