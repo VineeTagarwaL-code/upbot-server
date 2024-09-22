@@ -2,7 +2,6 @@ import { logger } from "../../service/logger";
 import { PingTask } from "../../database/models/task";
 import { Request, Response } from "express";
 import { pingQueue } from "../../service/queues/ping.queue";
-import { PingLog } from "../../database/models/tasklog";
 import { AsyncWrapper } from "../../utils/async-catch";
 import { IUser, customPayload } from "../../types";
 import { SuccessResponse } from "../../utils/success.res";
@@ -21,9 +20,15 @@ const createPingTask = AsyncWrapper(
     if (!user) {
       throw new ErrorHandler("User not found", "NOT_FOUND");
     }
+
     const existingTask = await PingTask.findOne({ url, userId: user._id });
+
     if (existingTask) {
       throw new ErrorHandler("Task already exists", "CONFLICT");
+    }
+    const tasks = await PingTask.find({ userId: user._id });
+    if (tasks.length >= 2) {
+      throw new ErrorHandler("Task limit reached", "BAD_REQUEST");
     }
     const pingTask = new PingTask({ userId: user._id, url, interval });
     const pingTaskid = pingTask._id as Types.ObjectId;
@@ -68,22 +73,35 @@ const getPingTask = async (req: Request, res: Response) => {
   }
 };
 
+// const deleteTask = AsyncWrapper(async (req: CustomRequest, res: Response) => {
+//   const {url} = req.body;
+//   const user = req.user;
+//   if (!user) {
+//     throw new ErrorHandler("User not found", "NOT_FOUND");
+//   }
+//   const task = await PingTask.findOne({ url, userId: user._id });
+//   if (!task) {
+//     throw new ErrorHandler("Task not found", "NOT_FOUND");
+//   }
+//   await task.remove();
+
+// })
 const deactivatePingTask = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const pingTask = await PingTask.findById(id);
-    if (!pingTask) {
-      res.status(404).json({ message: "Ping task not found" });
-      return;
-    }
-    await pingQueue.removeRepeatableByKey(`pingJob-${id}`);
-    pingTask.isActive = false;
-    await pingTask.save();
-    res.status(200).json({ message: "Ping task deactivated" });
-  } catch (err) {
-    logger.error(`Error deactivating ping task: ${err}`);
-    res.status(500).json({ message: "Error deactivating ping task" });
-  }
+  // try {
+  //   const { url } = req.body;
+  //   const pingTask = await PingTask.findById(id);
+  //   if (!pingTask) {
+  //     res.status(404).json({ message: "Ping task not found" });
+  //     return;
+  //   }
+  //   await pingQueue.removeRepeatableByKey(`pingJob-${id}`);
+  //   pingTask.isActive = false;
+  //   await pingTask.save();
+  //   res.status(200).json({ message: "Ping task deactivated" });
+  // } catch (err) {
+  //   logger.error(`Error deactivating ping task: ${err}`);
+  //   res.status(500).json({ message: "Error deactivating ping task" });
+  // }
 };
 
 const getAllTask = AsyncWrapper(async (req: CustomRequest, res: Response) => {
