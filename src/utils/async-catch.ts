@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { standardizeApiError } from "./error.res";
+import { CustomRequest } from "../types";
 type asyncHandler<T = any> = (
   req: Request,
   res: Response,

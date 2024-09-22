@@ -1,4 +1,5 @@
-import mongoose from "mongoose";
+import mongoose, { Model } from "mongoose";
+import { IUser } from "../../types";
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   image: { type: String },
@@ -6,5 +7,5 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-const User = mongoose.model("User", userSchema);
+const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
 export { User };

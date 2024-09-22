@@ -1,6 +1,7 @@
-const mongoose = require("mongoose");
+import mongoose, { Model } from "mongoose";
 
-const pingLogSchema = new mongoose.Schema({
+import { TaskLog } from "../../types";
+const TaskLogSchema = new mongoose.Schema({
   status: { type: String, enum: ["success", "failure"], required: true },
   responseMessage: { type: String },
   responseTime: { type: Number },
@@ -8,5 +9,8 @@ const pingLogSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-const PingLog = mongoose.model("PingLog", pingLogSchema);
+const PingLog: Model<TaskLog> = mongoose.model<TaskLog>(
+  "PingLog",
+  TaskLogSchema
+);
 export { PingLog };
